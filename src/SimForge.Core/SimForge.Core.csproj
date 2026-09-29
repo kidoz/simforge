@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimForge</RootNamespace>
+    <Description>Deterministic in-process simulation core: environment lifecycle, virtual time, scheduling, deterministic IDs, fault injection, and the operation journal.</Description>
+  </PropertyGroup>
+</Project>
