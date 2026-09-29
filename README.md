@@ -23,6 +23,10 @@ and an operation journal that records what happened. It currently implements:
 - a thin xUnit v3 adapter, verified through xUnit's own runner;
 - a PostgreSQL-oriented storage model with a declared schema, key-based reads and writes, deterministic scans,
   primary-key, not-null, and unique constraints, and single-writer transactions with atomic multi-table commit;
+- immutable message envelopes whose bodies are copied on creation and on every read;
+- a RabbitMQ-oriented broker model with direct, fanout, and default exchanges and publisher confirms separate from
+  consumer acknowledgement. It also has per-channel delivery tags, bounded prefetch, ack/nack/reject with requeue,
+  redelivery on channel close, and dead-lettering of rejected messages;
 - machine-readable capability manifests and compatibility tables, checked against the code by tests;
 - an Orders sample that uses a transactional outbox over test-side repository adapters.
 
@@ -46,6 +50,8 @@ All packages target .NET 10. None is published to a package feed yet; reference 
 | `SimForge.Testing` | Runner-neutral scenarios, per-run services, `ScenarioExecutor`, and outcome classification |
 | `SimForge.Assertions` | `SimAssert` runner-neutral assertions |
 | `SimForge.PostgreSql` | PostgreSQL-oriented application-contract storage model |
+| `SimForge.Messaging` | Immutable `MessageEnvelope` shared by broker models |
+| `SimForge.RabbitMq` | RabbitMQ-oriented exchange, queue, and delivery model |
 | `SimForge.Xunit` | Thin xUnit v3 adapter (`XunitScenario.RunAsync`) |
 
 Only `SimForge.Xunit` references a test framework, and application code never references SimForge. Tests enforce both
@@ -203,6 +209,30 @@ uncommitted writes, a commit publishes every change at once, and a statement err
 The capability table, value rules, and error codes are in the [PostgreSQL reference](docs/reference/postgresql.md). The
 machine-readable manifest is [`postgresql.capabilities.json`](docs/reference/postgresql.capabilities.json).
 
+## RabbitMQ-oriented messaging
+
+`SimForge.RabbitMq` models exchanges, queues, bindings, channels, and consumers. It is not an AMQP server and does not
+accept RabbitMQ.Client connections. Publishing returns a confirmation (routed, returned, or dropped), independent of
+whether anyone consumes the message. Deliveries are pushed to consumer callbacks as scheduled work, so they happen when
+the scenario drives the scheduler:
+
+```csharp
+var broker = context.GetResource<SimulatedRabbitMqBroker>("broker");
+broker.OpenChannel().Consume("order-placed", prefetchCount: 10, async (delivery, cancellationToken) =>
+{
+    await handler.HandleAsync(delivery.Message.ReadJson<OrderPlaced>(), cancellationToken);
+    delivery.Ack();
+});
+
+broker.Publish("orders", "order.placed", MessageEnvelope.FromJson("msg-1", new OrderPlaced(orderId, 4_250)));
+await context.Scheduler.RunUntilIdleAsync(cancellationToken); // deliver
+```
+
+A lost acknowledgement (`broker.InjectFault(RabbitMqOperations.Ack)`) closes the channel and requeues the message as
+redelivered, which is the case that tests consumer idempotency. See
+[How to test a RabbitMQ consumer](docs/how-to/test-a-rabbitmq-consumer.md) and the
+[RabbitMQ reference](docs/reference/rabbitmq.md).
+
 ## Samples
 
 [`samples/Orders.Simulated`](samples/Orders.Simulated/README.md) places orders with a transactional outbox. The
@@ -240,10 +270,14 @@ src/SimForge.Core/               environment, scheduler and virtual clock, IDs, 
 src/SimForge.Testing/            scenarios, per-run services, executor, results
 src/SimForge.Assertions/         SimAssert
 src/SimForge.PostgreSql/         schema, rows, transactions, capability manifest
+src/SimForge.Messaging/          immutable message envelopes
+src/SimForge.RabbitMq/           exchanges, queues, channels, deliveries, capability manifest
 src/SimForge.Xunit/              xUnit v3 adapter
 tests/SimForge.Core.Tests/       scheduler, timers, lifecycle, faults, journal, isolation
 tests/SimForge.Testing.Tests/    outcome classification, cancellation, timeouts, services, SimAssert
 tests/SimForge.PostgreSql.Tests/ constraints, transactions, state-machine walks, capability-document drift
+tests/SimForge.Messaging.Tests/  envelope copy isolation, equality, JSON and text helpers
+tests/SimForge.RabbitMq.Tests/   routing, confirms, deliveries, acknowledgement, dead-lettering, faults, state-machine walks
 tests/SimForge.Xunit.Tests/      outcome mapping and end-to-end checks through xUnit
 tests/SimForge.Xunit.Fixtures/   deliberately failing xUnit tests, run by SimForge.Xunit.Tests
 tests/SimForge.Architecture.Tests/ dependency direction and runner independence
@@ -253,9 +287,8 @@ docs/                            tutorial, how-to guides, reference, and explana
 
 ## Roadmap
 
-1. Message brokers: shared immutable envelopes, a RabbitMQ model, and a Kafka partitioned-log model. RabbitMQ gets
-   exchanges, queues, acknowledgements, and redelivery; Kafka gets partitions, consumer groups, and committed
-   offsets. They also complete the Orders outbox dispatcher and consumer failure cases.
+1. A Kafka partitioned-log model: partitions, consumer groups, read positions separate from committed offsets, and
+   replay. Then the Orders outbox dispatcher and consumer, with the broker failure cases, over both brokers.
 2. Fidelity evidence: an opt-in contract suite against pinned real services, so that capabilities can earn
    `VerifiedSubset`, and verification on Linux, Windows, and macOS.
 3. Redis, then MongoDB, each as its own tested provider.

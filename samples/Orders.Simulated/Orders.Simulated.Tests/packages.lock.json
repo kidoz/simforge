@@ -128,10 +128,20 @@
       "simforge.core": {
         "type": "Project"
       },
+      "simforge.messaging": {
+        "type": "Project"
+      },
       "simforge.postgresql": {
         "type": "Project",
         "dependencies": {
           "SimForge.Core": "[1.0.0, )"
+        }
+      },
+      "simforge.rabbitmq": {
+        "type": "Project",
+        "dependencies": {
+          "SimForge.Core": "[1.0.0, )",
+          "SimForge.Messaging": "[1.0.0, )"
         }
       },
       "simforge.testing": {
