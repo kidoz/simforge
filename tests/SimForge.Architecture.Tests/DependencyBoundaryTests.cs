@@ -18,6 +18,8 @@ public sealed class DependencyBoundaryTests
         ["SimForge.Testing"] = ["SimForge.Core"],
         ["SimForge.Assertions"] = ["SimForge.Core"],
         ["SimForge.PostgreSql"] = ["SimForge.Core"],
+        ["SimForge.Messaging"] = [],
+        ["SimForge.RabbitMq"] = ["SimForge.Core", "SimForge.Messaging"],
         ["SimForge.Xunit"] = ["SimForge.Testing"],
     };
 
@@ -27,6 +29,8 @@ public sealed class DependencyBoundaryTests
         ["SimForge.Testing"] = [],
         ["SimForge.Assertions"] = [],
         ["SimForge.PostgreSql"] = [],
+        ["SimForge.Messaging"] = [],
+        ["SimForge.RabbitMq"] = [],
         ["SimForge.Xunit"] = ["xunit.v3.extensibility.core", "xunit.v3.assert"],
     };
 

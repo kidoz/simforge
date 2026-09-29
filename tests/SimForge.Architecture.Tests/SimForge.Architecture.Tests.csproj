@@ -7,6 +7,8 @@
     <ProjectReference Include="..\..\src\SimForge.Testing\SimForge.Testing.csproj" />
     <ProjectReference Include="..\..\src\SimForge.Assertions\SimForge.Assertions.csproj" />
     <ProjectReference Include="..\..\src\SimForge.PostgreSql\SimForge.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\src\SimForge.Messaging\SimForge.Messaging.csproj" />
+    <ProjectReference Include="..\..\src\SimForge.RabbitMq\SimForge.RabbitMq.csproj" />
     <ProjectReference Include="..\..\src\SimForge.Xunit\SimForge.Xunit.csproj" />
     <ProjectReference Include="..\..\samples\Orders.Simulated\Orders.Application\Orders.Application.csproj" />
   </ItemGroup>
