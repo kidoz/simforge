@@ -6,6 +6,7 @@
     <Project Path="src/SimForge.PostgreSql/SimForge.PostgreSql.csproj" />
     <Project Path="src/SimForge.Messaging/SimForge.Messaging.csproj" />
     <Project Path="src/SimForge.RabbitMq/SimForge.RabbitMq.csproj" />
+    <Project Path="src/SimForge.Kafka/SimForge.Kafka.csproj" />
     <Project Path="src/SimForge.Xunit/SimForge.Xunit.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -14,6 +15,7 @@
     <Project Path="tests/SimForge.PostgreSql.Tests/SimForge.PostgreSql.Tests.csproj" />
     <Project Path="tests/SimForge.Messaging.Tests/SimForge.Messaging.Tests.csproj" />
     <Project Path="tests/SimForge.RabbitMq.Tests/SimForge.RabbitMq.Tests.csproj" />
+    <Project Path="tests/SimForge.Kafka.Tests/SimForge.Kafka.Tests.csproj" />
     <Project Path="tests/SimForge.Xunit.Fixtures/SimForge.Xunit.Fixtures.csproj" />
     <Project Path="tests/SimForge.Xunit.Tests/SimForge.Xunit.Tests.csproj" />
     <Project Path="tests/SimForge.Architecture.Tests/SimForge.Architecture.Tests.csproj" />

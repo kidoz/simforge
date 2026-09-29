@@ -1,0 +1,327 @@
+{
+  "provider": "kafka",
+  "title": "Kafka-oriented partitioned-log model",
+  "capabilities": [
+    {
+      "id": "kafka.topics",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Named topics with a fixed number of partitions, declared when the cluster is added.",
+      "operations": [
+        "AddKafkaCluster",
+        "KafkaTopologyBuilder.Topic"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "Names use at most 249 ASCII letters, digits, '.', '_' or '-'; '.' and '..' are illegal; the '__' prefix is rejected.",
+        "Producing to or subscribing to an undeclared topic fails with unknown_topic_or_partition; topics are never created automatically."
+      ],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.log",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Append-only partition logs with monotonic offsets starting at 0.",
+      "operations": [
+        "SimulatedKafkaCluster.GetPartition"
+      ],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [
+        "Records are ordered within a partition only; there is no ordering across partitions.",
+        "The log end offset is the number of records; with no replication it is also the high watermark.",
+        "Record timestamps are the virtual time of the append."
+      ],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.producer.explicit-partition",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Producing to an explicitly chosen partition, with an optional key.",
+      "operations": [
+        "SimulatedKafkaCluster.Produce(topic, partition, message, key)"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "A partition outside the topic's range fails with unknown_topic_or_partition before any state changes."
+      ],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.producer.key-partitioner",
+      "status": "SimulatedOnly",
+      "level": "ApplicationContract",
+      "summary": "Keyed records are placed by a documented SimForge partitioner.",
+      "operations": [
+        "SimulatedKafkaCluster.Produce(topic, key, message)",
+        "SimulatedKafkaCluster.PartitionForKey"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "Partition = (FNV-1a 32-bit hash of the UTF-8 key bytes & 0x7FFFFFFF) mod partition count; equal keys always map to the same partition."
+      ],
+      "deviations": [
+        "This is not the Java client's murmur2 partitioner or librdkafka's; a key can land on a different partition than in production."
+      ],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.consumers.groups",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Consumer groups with deterministic range assignment and one member per partition; independent groups read the same records.",
+      "operations": [
+        "SimulatedKafkaCluster.JoinGroup",
+        "KafkaConsumer.Close",
+        "SimulatedKafkaCluster.GetGroup"
+      ],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [
+        "Range assignment per topic: partitions in order are split into contiguous ranges over the subscribed members in join order; earlier members get the extra partitions.",
+        "Member IDs are deterministic: <group>-member-<n>."
+      ],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.consumers.simplified-rebalancing",
+      "status": "SimulatedOnly",
+      "level": "ApplicationContract",
+      "summary": "Simplified reassignment: joins and leaves take effect when the group's rebalance runs as scheduled work.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [
+        "Until the rebalance runs, existing members keep their assignment and a new member has none.",
+        "Every rebalance resets the positions of all assigned partitions to the committed offsets (eager rebalancing), so uncommitted progress is read again."
+      ],
+      "deviations": [
+        "There is no group coordinator protocol: no heartbeats, session timeouts, or cooperative or incremental rebalancing."
+      ],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.consumers.positions",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Per-member read positions, separate from committed offsets, with poll, seek, and seek to beginning or end.",
+      "operations": [
+        "KafkaConsumer.Poll",
+        "KafkaConsumer.Position",
+        "KafkaConsumer.Seek",
+        "KafkaConsumer.SeekToBeginning",
+        "KafkaConsumer.SeekToEnd"
+      ],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [
+        "SeekToBeginning and SeekToEnd take effect immediately rather than lazily."
+      ],
+      "assumptions": [
+        "Poll reads assigned partitions in rotating topic/partition order and returns records in offset order per partition."
+      ],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.consumers.offset-commits",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Manual commits store the next offset to consume per group and partition.",
+      "operations": [
+        "KafkaConsumer.Commit()",
+        "KafkaConsumer.Commit(partition, offset)",
+        "KafkaConsumer.Committed"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "Commit() stores the position of every assigned partition whose position is resolved; any poll resolves all assigned partitions, including those that returned no records.",
+        "Committing a partition not assigned to the member fails with commit_failed before any state changes.",
+        "Committed offsets survive member restarts and belong to the group, not the member."
+      ],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.consumers.offset-reset",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Earliest, Latest, and None reset policies for partitions without a committed offset or beyond the log end.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [
+        "The policy is chosen explicitly when joining; Kafka's default is Latest.",
+        "None fails with no_offset (no committed offset) or offset_out_of_range (beyond the log end) before any record is consumed."
+      ],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.faults",
+      "status": "SimulatedOnly",
+      "level": "ApplicationContract",
+      "summary": "Declared fault points for one-shot injected failures.",
+      "operations": [
+        "produce:before (nothing is appended)",
+        "produce:after (the record is appended, but the producer receives an error instead of its offset)",
+        "commit:before (the offsets are not stored)",
+        "commit:after (the offsets are stored, but the member receives an error)"
+      ],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.client-compatibility",
+      "status": "Unsupported",
+      "level": "WireProtocol",
+      "summary": "The Kafka wire protocol, Confluent.Kafka or other unchanged clients, and bootstrap servers.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.topics.management",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Automatic topic creation, runtime topic creation, deletion, or partition changes, and internal '__' topics.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.producer.keyless-partitioning",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Keyless records without an explicit partition (sticky or round-robin partitioning).",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.producer.idempotence-and-transactions",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Idempotent producers, transactions, read_committed isolation, and exactly-once processing; a retried produce appends a duplicate.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.consumers.auto-commit",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Automatic offset commits (enable.auto.commit); offsets change only through explicit commits.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.consumers.advanced-membership",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Static membership, cooperative or incremental rebalancing, the consumer group protocol, heartbeats, and session timeouts.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.consumers.manual-assignment",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Manual partition assignment (assign) without a consumer group.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.consumers.offset-lookup",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Offset lookup by timestamp and the by_duration reset policy.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.replication",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Replication, in-sync replicas, leader election, acks settings, and broker failures.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "kafka.log.retention-and-compaction",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Retention, log compaction, and log start offsets other than 0.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    }
+  ]
+}

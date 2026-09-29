@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimForge.Kafka</RootNamespace>
+    <Description>Kafka-oriented partitioned-log model for SimForge: topics, partitions, offsets, and consumer groups. Not wire compatible and not a Confluent.Kafka replacement.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimForge.Core\SimForge.Core.csproj" />
+    <ProjectReference Include="..\SimForge.Messaging\SimForge.Messaging.csproj" />
+  </ItemGroup>
+</Project>
