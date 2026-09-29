@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SimForge.Core/SimForge.Core.csproj" />
+    <Project Path="src/SimForge.Testing/SimForge.Testing.csproj" />
+    <Project Path="src/SimForge.Assertions/SimForge.Assertions.csproj" />
+    <Project Path="src/SimForge.PostgreSql/SimForge.PostgreSql.csproj" />
+    <Project Path="src/SimForge.Xunit/SimForge.Xunit.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SimForge.Core.Tests/SimForge.Core.Tests.csproj" />
+    <Project Path="tests/SimForge.Testing.Tests/SimForge.Testing.Tests.csproj" />
+    <Project Path="tests/SimForge.PostgreSql.Tests/SimForge.PostgreSql.Tests.csproj" />
+    <Project Path="tests/SimForge.Xunit.Fixtures/SimForge.Xunit.Fixtures.csproj" />
+    <Project Path="tests/SimForge.Xunit.Tests/SimForge.Xunit.Tests.csproj" />
+    <Project Path="tests/SimForge.Architecture.Tests/SimForge.Architecture.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Orders.Simulated/Orders.Application/Orders.Application.csproj" />
+    <Project Path="samples/Orders.Simulated/Orders.Simulated.Tests/Orders.Simulated.Tests.csproj" />
+  </Folder>
+</Solution>
