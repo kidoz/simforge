@@ -20,6 +20,7 @@ public sealed class DependencyBoundaryTests
         ["SimForge.PostgreSql"] = ["SimForge.Core"],
         ["SimForge.Messaging"] = [],
         ["SimForge.RabbitMq"] = ["SimForge.Core", "SimForge.Messaging"],
+        ["SimForge.Kafka"] = ["SimForge.Core", "SimForge.Messaging"],
         ["SimForge.Xunit"] = ["SimForge.Testing"],
     };
 
@@ -31,6 +32,7 @@ public sealed class DependencyBoundaryTests
         ["SimForge.PostgreSql"] = [],
         ["SimForge.Messaging"] = [],
         ["SimForge.RabbitMq"] = [],
+        ["SimForge.Kafka"] = [],
         ["SimForge.Xunit"] = ["xunit.v3.extensibility.core", "xunit.v3.assert"],
     };
 
