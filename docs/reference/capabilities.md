@@ -58,3 +58,4 @@ No provider implements `ClientApi`, `WireProtocol`, or `RealEngine`.
 | Provider | Package | Table | Manifest |
 |---|---|---|---|
 | `postgresql` | `SimForge.PostgreSql` | [postgresql.md](postgresql.md#capability-table) | [postgresql.capabilities.json](postgresql.capabilities.json) |
+| `rabbitmq` | `SimForge.RabbitMq` | [rabbitmq.md](rabbitmq.md#capability-table) | [rabbitmq.capabilities.json](rabbitmq.capabilities.json) |
