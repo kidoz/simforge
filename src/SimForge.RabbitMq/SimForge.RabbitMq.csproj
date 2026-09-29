@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimForge.RabbitMq</RootNamespace>
+    <Description>RabbitMQ-oriented exchange, queue, and delivery model for SimForge. Not AMQP compatible and not a RabbitMQ.Client replacement.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimForge.Core\SimForge.Core.csproj" />
+    <ProjectReference Include="..\SimForge.Messaging\SimForge.Messaging.csproj" />
+  </ItemGroup>
+</Project>

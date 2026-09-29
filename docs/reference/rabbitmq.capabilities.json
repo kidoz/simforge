@@ -1,0 +1,414 @@
+{
+  "provider": "rabbitmq",
+  "title": "RabbitMQ-oriented exchange, queue, and delivery model",
+  "capabilities": [
+    {
+      "id": "rabbitmq.topology.exchanges",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Named direct and fanout exchanges plus the implicit default exchange, fixed when the broker is added.",
+      "operations": [
+        "AddRabbitMqBroker",
+        "RabbitMqTopologyBuilder.Exchange"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "Names are non-empty, at most 255 UTF-8 bytes, and unique; the 'amq.' prefix is rejected.",
+        "Exchanges are not durable or auto-deleted; they exist for the lifetime of the environment."
+      ],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.topology.queues",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Named FIFO queues with ready and unacknowledged messages.",
+      "operations": [
+        "RabbitMqTopologyBuilder.Queue",
+        "SimulatedRabbitMqBroker.GetQueue"
+      ],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [
+        "Queues keep messages in memory only; durability, persistence, and queue arguments are not modeled."
+      ],
+      "assumptions": [
+        "Ready messages are delivered in enqueue order; a requeued message returns to its original position."
+      ],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.topology.bindings",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Queue-to-exchange bindings with a routing key.",
+      "operations": [
+        "RabbitMqTopologyBuilder.Bind"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "The queue and exchange must be declared first; binding to the default exchange is rejected.",
+        "Repeating an identical binding has no effect."
+      ],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.routing.default-exchange",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "The default exchange (\"\") routes to the queue whose name equals the routing key.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.routing.direct",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Direct exchanges route to every queue bound with a routing key equal to the message's routing key.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [
+        "A message routed to several queues is enqueued once per queue, in binding declaration order."
+      ],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.routing.fanout",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Fanout exchanges route to every bound queue and ignore the routing key.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.publishing.confirms",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Publishing returns a publisher confirmation (Routed, Returned, or Dropped), separate from consumer acknowledgement.",
+      "operations": [
+        "SimulatedRabbitMqBroker.Publish"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "Routed: enqueued on every target queue before the confirmation is returned.",
+        "Returned: unroutable with mandatory set; nothing is enqueued.",
+        "Dropped: unroutable without mandatory; nothing is enqueued.",
+        "Publishing to an undeclared exchange fails with not_found before any state changes."
+      ],
+      "deviations": [
+        "Confirms are always enabled and returned synchronously; there are no publisher channels or confirm sequence numbers.",
+        "The broker never nacks a publication on its own; broker-side rejection is modeled with a fault rule."
+      ],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.consumers.channels",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Consumer channels own their deliveries and delivery tags (1, 2, … per channel).",
+      "operations": [
+        "SimulatedRabbitMqBroker.OpenChannel",
+        "RabbitMqChannel.Close"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "A channel error (unknown delivery tag, reused consumer tag, consuming from a missing queue) closes the channel.",
+        "Closing a channel cancels its consumers and requeues its unacknowledged deliveries.",
+        "A closed channel rejects further operations with InvalidOperationException."
+      ],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.consumers.manual-acknowledgement",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Ack, nack, and reject with the multiple and requeue flags.",
+      "operations": [
+        "RabbitMqChannel.Ack",
+        "RabbitMqChannel.Nack",
+        "RabbitMqChannel.Reject",
+        "RabbitMqDelivery.Ack",
+        "RabbitMqDelivery.Nack",
+        "RabbitMqDelivery.Reject"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "multiple settles every outstanding delivery up to and including the tag; tag 0 with multiple settles all.",
+        "An unknown or already settled tag fails with precondition_failed and closes the channel.",
+        "requeue: false dead-letters the message when the queue has a dead-letter exchange, and discards it otherwise."
+      ],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.consumers.prefetch",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Per-consumer bounded prefetch (1-65535) and deterministic round-robin consumer selection.",
+      "operations": [
+        "RabbitMqChannel.Consume"
+      ],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [
+        "Delivery handlers run one at a time in scheduler order; concurrent consumer execution is not modeled."
+      ],
+      "assumptions": [
+        "Deliveries are pushed as scheduled work, one delivery per scheduler step, only while the scheduler is driven.",
+        "Consumers of a queue are selected round-robin in registration order, skipping consumers at their prefetch limit. This is a SimForge rule, not a documented RabbitMQ guarantee."
+      ],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.consumers.redelivery",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Requeued messages (nack or reject with requeue, or channel close) are redelivered with Redelivered set.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [
+        "Requeued messages return to their original queue position."
+      ],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.dead-lettering.rejected",
+      "status": "SimulatedOnly",
+      "level": "ServiceSemantics",
+      "summary": "Rejected messages are dead-lettered to a configured exchange.",
+      "operations": [
+        "QueueBuilder.DeadLetterTo"
+      ],
+      "dataTypes": [],
+      "boundaries": [
+        "Only rejection (reject or nack with requeue: false) dead-letters; expiry and length limits are not modeled.",
+        "The routing key is the queue's dead-letter routing key, or the message's routing key when none is set.",
+        "A missing dead-letter exchange, or an unroutable dead-lettered message, drops the message.",
+        "Dead-lettered messages carry x-first-death-queue, x-first-death-reason, x-first-death-exchange and the matching x-last-death-* headers."
+      ],
+      "deviations": [
+        "The x-death header array is not produced; headers are strings only."
+      ],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.faults",
+      "status": "SimulatedOnly",
+      "level": "ApplicationContract",
+      "summary": "Declared fault points for one-shot injected failures.",
+      "operations": [
+        "publish:before (the broker does not accept the message; nothing is enqueued)",
+        "publish:after (the message is enqueued, but the publisher receives an error instead of the confirmation)",
+        "ack:before, nack:before, reject:before (the connection is lost: the settlement is not applied and the channel closes, requeueing its unacknowledged deliveries)"
+      ],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.client-compatibility",
+      "status": "Unsupported",
+      "level": "WireProtocol",
+      "summary": "AMQP 0-9-1 protocol, RabbitMQ.Client or other unchanged clients, connections, and connection strings.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.routing.topic",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Topic exchanges and wildcard routing keys.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.routing.headers",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Headers exchanges.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.topology.reserved-names",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Predeclared 'amq.*' exchanges and server-named queues.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.topology.runtime-declaration",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Declaring or deleting exchanges, queues, or bindings after the broker is added; purging queues.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.topology.exchange-bindings",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Exchange-to-exchange bindings and alternate exchanges.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.queues.ttl-and-length-limits",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Message and queue TTL, length limits and overflow, and dead-lettering for expired or dropped messages.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.queues.types",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Quorum and stream queues, priorities, exclusive and auto-delete queues, and single active consumer.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.consumers.automatic-acknowledgement",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Automatic acknowledgement mode.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.consumers.unlimited-prefetch",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Prefetch 0 (unlimited) and channel-global QoS.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.consumers.basic-get",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Polling with basic.get.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.transactions",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "AMQP transactions (tx.select, tx.commit, tx.rollback).",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    },
+    {
+      "id": "rabbitmq.durability-and-clustering",
+      "status": "Unsupported",
+      "level": "ServiceSemantics",
+      "summary": "Persistence, broker restarts, clustering, federation, and shovels.",
+      "operations": [],
+      "dataTypes": [],
+      "boundaries": [],
+      "deviations": [],
+      "assumptions": [],
+      "referenceVersion": null,
+      "verificationCases": []
+    }
+  ]
+}
