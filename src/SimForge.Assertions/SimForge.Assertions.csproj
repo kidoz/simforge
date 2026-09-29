@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimForge.Assertions</RootNamespace>
+    <Description>Runner-neutral assertions that fail with SimForgeAssertionException and carry no test-framework dependency.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimForge.Core\SimForge.Core.csproj" />
+  </ItemGroup>
+</Project>

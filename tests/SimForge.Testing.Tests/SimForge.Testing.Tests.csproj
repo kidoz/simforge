@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimForge.Testing\SimForge.Testing.csproj" />
+    <ProjectReference Include="..\..\src\SimForge.Assertions\SimForge.Assertions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\RecordingResource.cs" Link="Shared\RecordingResource.cs" />
+  </ItemGroup>
+</Project>
