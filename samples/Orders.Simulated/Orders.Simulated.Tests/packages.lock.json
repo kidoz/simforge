@@ -128,6 +128,13 @@
       "simforge.core": {
         "type": "Project"
       },
+      "simforge.kafka": {
+        "type": "Project",
+        "dependencies": {
+          "SimForge.Core": "[1.0.0, )",
+          "SimForge.Messaging": "[1.0.0, )"
+        }
+      },
       "simforge.messaging": {
         "type": "Project"
       },

@@ -27,6 +27,9 @@ and an operation journal that records what happened. It currently implements:
 - a RabbitMQ-oriented broker model with direct, fanout, and default exchanges and publisher confirms separate from
   consumer acknowledgement. It also has per-channel delivery tags, bounded prefetch, ack/nack/reject with requeue,
   redelivery on channel close, and dead-lettering of rejected messages;
+- a Kafka-oriented partitioned-log model with fixed partitions, monotonic offsets, and a documented key partitioner. Its
+  consumer groups have range assignment and rebalances at scheduler boundaries, and read positions separate from
+  committed offsets, with seek, replay, and earliest, latest, and none reset policies;
 - machine-readable capability manifests and compatibility tables, checked against the code by tests;
 - an Orders sample that uses a transactional outbox over test-side repository adapters.
 
@@ -52,6 +55,7 @@ All packages target .NET 10. None is published to a package feed yet; reference 
 | `SimForge.PostgreSql` | PostgreSQL-oriented application-contract storage model |
 | `SimForge.Messaging` | Immutable `MessageEnvelope` shared by broker models |
 | `SimForge.RabbitMq` | RabbitMQ-oriented exchange, queue, and delivery model |
+| `SimForge.Kafka` | Kafka-oriented partitioned-log model with consumer groups |
 | `SimForge.Xunit` | Thin xUnit v3 adapter (`XunitScenario.RunAsync`) |
 
 Only `SimForge.Xunit` references a test framework, and application code never references SimForge. Tests enforce both
@@ -233,6 +237,31 @@ redelivered, which is the case that tests consumer idempotency. See
 [How to test a RabbitMQ consumer](docs/how-to/test-a-rabbitmq-consumer.md) and the
 [RabbitMQ reference](docs/reference/rabbitmq.md).
 
+## Kafka-oriented logs
+
+`SimForge.Kafka` models topics as append-only partition logs read by consumer groups. It is not a Kafka broker and
+does not accept Confluent.Kafka connections. A member's read position is separate from its group's committed offset,
+and offsets are never committed automatically:
+
+```csharp
+var cluster = context.GetResource<SimulatedKafkaCluster>("kafka");
+var consumer = cluster.JoinGroup("billing", ["orders"], KafkaOffsetReset.Earliest);
+await context.Scheduler.RunUntilIdleAsync(cancellationToken); // runs the rebalance
+
+cluster.Produce("orders", orderId.ToString(), MessageEnvelope.FromJson("msg-1", new OrderPlaced(orderId, 4_250)));
+
+foreach (var record in consumer.Poll())
+{
+    await handler.HandleAsync(record.Message.ReadJson<OrderPlaced>(), cancellationToken);
+}
+
+consumer.Commit(); // stores the next offset to read; without it, a restart reads the records again
+```
+
+Membership changes take effect when the scheduler runs the group's rebalance, and every rebalance restarts reads from
+the committed offsets. Closing a member before it commits reproduces at-least-once redelivery. See
+[How to test a Kafka consumer](docs/how-to/test-a-kafka-consumer.md) and the [Kafka reference](docs/reference/kafka.md).
+
 ## Samples
 
 [`samples/Orders.Simulated`](samples/Orders.Simulated/README.md) places orders with a transactional outbox. The
@@ -272,12 +301,14 @@ src/SimForge.Assertions/         SimAssert
 src/SimForge.PostgreSql/         schema, rows, transactions, capability manifest
 src/SimForge.Messaging/          immutable message envelopes
 src/SimForge.RabbitMq/           exchanges, queues, channels, deliveries, capability manifest
+src/SimForge.Kafka/              topics, partition logs, consumer groups, offsets, capability manifest
 src/SimForge.Xunit/              xUnit v3 adapter
 tests/SimForge.Core.Tests/       scheduler, timers, lifecycle, faults, journal, isolation
 tests/SimForge.Testing.Tests/    outcome classification, cancellation, timeouts, services, SimAssert
 tests/SimForge.PostgreSql.Tests/ constraints, transactions, state-machine walks, capability-document drift
 tests/SimForge.Messaging.Tests/  envelope copy isolation, equality, JSON and text helpers
 tests/SimForge.RabbitMq.Tests/   routing, confirms, deliveries, acknowledgement, dead-lettering, faults, state-machine walks
+tests/SimForge.Kafka.Tests/      logs, partitioning, groups, rebalances, positions and commits, resets, faults, state-machine walks
 tests/SimForge.Xunit.Tests/      outcome mapping and end-to-end checks through xUnit
 tests/SimForge.Xunit.Fixtures/   deliberately failing xUnit tests, run by SimForge.Xunit.Tests
 tests/SimForge.Architecture.Tests/ dependency direction and runner independence
@@ -287,8 +318,9 @@ docs/                            tutorial, how-to guides, reference, and explana
 
 ## Roadmap
 
-1. A Kafka partitioned-log model: partitions, consumer groups, read positions separate from committed offsets, and
-   replay. Then the Orders outbox dispatcher and consumer, with the broker failure cases, over both brokers.
+1. The Orders outbox dispatcher and idempotent consumer over RabbitMQ and Kafka, with the broker failure cases: broker
+   failure after the database commit, a duplicate publish after a failed outbox update, and a lost acknowledgement or
+   offset commit.
 2. Fidelity evidence: an opt-in contract suite against pinned real services, so that capabilities can earn
    `VerifiedSubset`, and verification on Linux, Windows, and macOS.
 3. Redis, then MongoDB, each as its own tested provider.
