@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimForge.Xunit</RootNamespace>
+    <Description>Thin xUnit v3 adapter: runs SimForge scenarios from xUnit tests and maps every outcome into xUnit's reporting model.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimForge.Testing\SimForge.Testing.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Library packages: TestContext comes from extensibility.core, dynamic skip from assert. -->
+    <PackageReference Include="xunit.v3.extensibility.core" />
+    <PackageReference Include="xunit.v3.assert" />
+  </ItemGroup>
+</Project>

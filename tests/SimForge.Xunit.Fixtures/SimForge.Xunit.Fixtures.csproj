@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Deliberately failing xUnit tests. SimForge.Xunit.Tests runs this executable with the native xUnit runner and checks
+    that xUnit reports every scenario outcome correctly. Opting out of Microsoft.Testing.Platform keeps it out of `dotnet test`.
+  -->
+  <PropertyGroup>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+    <UseMicrosoftTestingPlatformRunner>false</UseMicrosoftTestingPlatformRunner>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimForge.Xunit\SimForge.Xunit.csproj" />
+    <ProjectReference Include="..\..\src\SimForge.Assertions\SimForge.Assertions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\RecordingResource.cs" Link="Shared\RecordingResource.cs" />
+  </ItemGroup>
+</Project>

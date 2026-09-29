@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimForge.Xunit\SimForge.Xunit.csproj" />
+    <ProjectReference Include="..\..\src\SimForge.Assertions\SimForge.Assertions.csproj" />
+    <!-- Built first so the end-to-end test can run it; its assembly is not referenced. -->
+    <ProjectReference Include="..\SimForge.Xunit.Fixtures\SimForge.Xunit.Fixtures.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\RecordingResource.cs" Link="Shared\RecordingResource.cs" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>SimForge.Xunit.Fixtures.Assembly</_Parameter1>
+      <_Parameter2>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../SimForge.Xunit.Fixtures/bin/$(Configuration)/$(TargetFramework)/SimForge.Xunit.Fixtures.dll'))</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>
