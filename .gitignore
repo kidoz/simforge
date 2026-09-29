@@ -1,0 +1,21 @@
+# .NET build output
+bin/
+obj/
+/packages/
+TestResults/
+
+# IDE and editor state (Rider manages the rest of .idea/ with its own nested .gitignore)
+riderModule.iml
+/_ReSharper.Caches/
+*.DotSettings.user
+.vs/
+*.user
+*.suo
+
+# Python bytecode from .agents/tools
+__pycache__/
+*.py[cod]
+
+# OS files
+.DS_Store
+Thumbs.db
