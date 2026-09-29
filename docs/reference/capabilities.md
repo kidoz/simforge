@@ -59,3 +59,4 @@ No provider implements `ClientApi`, `WireProtocol`, or `RealEngine`.
 |---|---|---|---|
 | `postgresql` | `SimForge.PostgreSql` | [postgresql.md](postgresql.md#capability-table) | [postgresql.capabilities.json](postgresql.capabilities.json) |
 | `rabbitmq` | `SimForge.RabbitMq` | [rabbitmq.md](rabbitmq.md#capability-table) | [rabbitmq.capabilities.json](rabbitmq.capabilities.json) |
+| `kafka` | `SimForge.Kafka` | [kafka.md](kafka.md#capability-table) | [kafka.capabilities.json](kafka.capabilities.json) |

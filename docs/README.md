@@ -13,6 +13,7 @@ looking something up, or understanding.
 - [How to simulate database failures](how-to/simulate-database-failures.md)
 - [How to back a repository with simulated storage](how-to/back-a-repository-with-simulated-storage.md)
 - [How to test a RabbitMQ consumer](how-to/test-a-rabbitmq-consumer.md)
+- [How to test a Kafka consumer](how-to/test-a-kafka-consumer.md)
 - [How to reproduce and diagnose a failing scenario](how-to/reproduce-a-failing-scenario.md)
 - [How to change a provider's documented capabilities](how-to/change-a-provider-capability.md) (contributors)
 
@@ -26,6 +27,7 @@ looking something up, or understanding.
 - [SimForge.PostgreSql](reference/postgresql.md): API, fault points, capability table, value rules, transaction model, and error codes ([JSON manifest](reference/postgresql.capabilities.json))
 - [SimForge.Messaging](reference/messaging.md): `MessageEnvelope`
 - [SimForge.RabbitMq](reference/rabbitmq.md): topology, publishing and confirms, channels and deliveries, fault points, capability table, and error codes ([JSON manifest](reference/rabbitmq.capabilities.json))
+- [SimForge.Kafka](reference/kafka.md): topics and logs, producing, consumer groups, positions and commits, fault points, capability table, and error codes ([JSON manifest](reference/kafka.capabilities.json))
 - [Capability manifests](reference/capabilities.md): capability statuses and compatibility levels
 
 ## Explanation: understanding the design
@@ -35,4 +37,5 @@ looking something up, or understanding.
 - [About faults and ambiguous outcomes](explanation/about-faults-and-ambiguous-outcomes.md)
 - [About the PostgreSQL model](explanation/about-the-postgresql-model.md)
 - [About the RabbitMQ model](explanation/about-the-rabbitmq-model.md)
+- [About the Kafka model](explanation/about-the-kafka-model.md)
 - [About runner independence](explanation/about-runner-independence.md)

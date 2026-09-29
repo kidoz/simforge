@@ -5,7 +5,8 @@ capability table, and JSON file stay in agreement.
 
 1. **Change the manifest in code.** For PostgreSQL, edit `PostgreSqlCapabilities.Manifest` in
    `src/SimForge.PostgreSql/PostgreSqlCapabilities.cs`; for RabbitMQ, `RabbitMqCapabilities.Manifest` in
-   `src/SimForge.RabbitMq/RabbitMqCapabilities.cs`. For a new capability, add its ID constant to the provider's
+   `src/SimForge.RabbitMq/RabbitMqCapabilities.cs`; for Kafka, `KafkaCapabilities.Manifest` in
+   `src/SimForge.Kafka/KafkaCapabilities.cs`. For a new capability, add its ID constant to the provider's
    `...CapabilityIds` class; a test fails when a constant is missing from the manifest.
 2. **Throw the right ID.** Code that rejects an unsupported request throws
    `UnsupportedCapabilityException(PostgreSqlCapabilityIds.<Name>, ...)` before changing any state.
