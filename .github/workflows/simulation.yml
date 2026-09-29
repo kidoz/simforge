@@ -1,0 +1,33 @@
+name: simulation
+
+# Default simulation suite: in-process only, with no Docker, service processes, sockets, or credentials.
+# The network is needed only for the locked restore step.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  simulation:
+    name: simulation (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Restore pinned dependencies
+        run: dotnet restore SimForge.slnx --locked-mode
+      - name: Build
+        run: dotnet build SimForge.slnx --configuration Release --no-restore
+      - name: Test
+        run: dotnet test --solution SimForge.slnx --configuration Release --no-build
