@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimForge.PostgreSql</RootNamespace>
+    <Description>PostgreSQL-oriented application-contract storage simulation for SimForge. Not a SQL engine, not an Npgsql or EF Core provider, and not wire compatible.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimForge.Core\SimForge.Core.csproj" />
+  </ItemGroup>
+</Project>
