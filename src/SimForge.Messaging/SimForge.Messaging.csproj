@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SimForge.Messaging</RootNamespace>
+    <Description>Immutable message envelopes and serialization helpers shared by SimForge broker models. Contains no broker behavior.</Description>
+  </PropertyGroup>
+</Project>
