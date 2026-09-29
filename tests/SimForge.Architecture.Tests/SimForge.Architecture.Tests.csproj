@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimForge.Core\SimForge.Core.csproj" />
+    <ProjectReference Include="..\..\src\SimForge.Testing\SimForge.Testing.csproj" />
+    <ProjectReference Include="..\..\src\SimForge.Assertions\SimForge.Assertions.csproj" />
+    <ProjectReference Include="..\..\src\SimForge.PostgreSql\SimForge.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\src\SimForge.Xunit\SimForge.Xunit.csproj" />
+    <ProjectReference Include="..\..\samples\Orders.Simulated\Orders.Application\Orders.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\RepositoryPaths.cs" Link="Shared\RepositoryPaths.cs" />
+  </ItemGroup>
+</Project>
