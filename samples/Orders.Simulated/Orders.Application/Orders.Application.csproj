@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Production-style application code. It must not reference SimForge; simulation adapters live in the test project. -->
+    <RootNamespace>Orders.Application</RootNamespace>
+  </PropertyGroup>
+</Project>
