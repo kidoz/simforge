@@ -88,7 +88,8 @@ public sealed class OperationJournal
 
     /// <summary>
     /// Records an entry at the current virtual time. <paramref name="payload"/> is evaluated only when payload capture is
-    /// enabled, so it must not have side effects.
+    /// enabled, so it must not have side effects. <paramref name="correlationId"/>, when not null, is recorded instead of
+    /// the ambient <see cref="CurrentCorrelationId"/>.
     /// </summary>
     public OperationJournalEntry Record(
         string provider,
@@ -99,7 +100,8 @@ public sealed class OperationJournal
         string? target = null,
         string? details = null,
         string? error = null,
-        Func<string?>? payload = null)
+        Func<string?>? payload = null,
+        string? correlationId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(provider);
         ArgumentException.ThrowIfNullOrWhiteSpace(resource);
@@ -107,7 +109,7 @@ public sealed class OperationJournal
         ArgumentException.ThrowIfNullOrWhiteSpace(phase);
         var virtualTime = _environment.Scheduler.Now;
         var capturedPayload = CapturesPayloads && payload is not null ? payload() : null;
-        var correlationId = _correlation.Value;
+        correlationId ??= _correlation.Value;
         lock (_gate)
         {
             var entry = new OperationJournalEntry(

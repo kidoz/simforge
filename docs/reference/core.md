@@ -212,7 +212,7 @@ Execution rules:
 
 | Member | Description |
 |---|---|
-| `Record(provider, resource, operation, phase, outcome, target, details, error, payload)` | Appends an entry at the current virtual time. `payload` is a `Func<string?>`, evaluated only when payload capture is enabled. |
+| `Record(provider, resource, operation, phase, outcome, target, details, error, payload, correlationId)` | Appends an entry at the current virtual time. `payload` is a `Func<string?>`, evaluated only when payload capture is enabled. A non-null `correlationId` replaces the ambient correlation ID for this entry. |
 | `GetEntries()` | Immutable snapshot of all entries, in recording order. |
 | `Count` | Number of entries. |
 | `BeginCorrelation(correlationId)` | Sets the correlation ID for entries recorded by the current asynchronous flow until the returned scope is disposed. Scopes nest. |
